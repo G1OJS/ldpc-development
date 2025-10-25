@@ -49,8 +49,10 @@ def bitsLE_to_int(bits):
     return n
 
 def safe_atanh(x, eps=1e-12):
+    # note - not a huge difference in speed between the atanh and the log approx
     x = np.clip(x, -1 + eps, 1 - eps)
     return 0.5 * np.log((1 + x) / (1 - x))
+  #  return np.atanh(x)
 
 # precompute bits to check for syndrome
 synd_check_idxs=[]
@@ -76,11 +78,10 @@ def decode174_91(llr, maxiterations = 30, gamma = 0.0026, nstall_max = 8, ncheck
     tanhtoc = np.zeros((7, kM), dtype=np.float64)
     tov = np.zeros((kNCW, kN), dtype=np.float32)    # check -> message messages
     nclast, nstall = 0, 0                           # stall condition variables
-    llr = np.copy(llr)                              # working copy of llrs (for speed)
-    zn = np.array(llr, dtype=np.float32)            # working copy of llrs (for speed)    
+    zn = np.array(llr, dtype=np.float32)            # working copy of llrs 
     mult = (np.max(zn) - np.min(zn)) * gamma        # empricical multiplier for tov, proportional to llr scale
-    ncheck, decoded_bits174_LE_list = count_syndrome_checks(zn)
 
+    ncheck, decoded_bits174_LE_list = count_syndrome_checks(zn)
     if(ncheck ==0):
         return decoded_bits174_LE_list, -1
     
