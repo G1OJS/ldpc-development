@@ -108,12 +108,14 @@ def run_trials(n, snr_dB):
             s +=1
     return(s/n)
 
+import time
+t0=time.time()
 def test_vs_snr():
     nTrials = 50
     print("snr_dB, success%")
     for snr_dB in np.linspace(5, 8, 10):
         success = run_trials(nTrials, snr_dB)
-        print(f"{snr_dB:.1f}, {success:.0%}")
+        print(f"{snr_dB:.1f}, {success:.0%} time = {time.time()-t0:.1f}")
 
 test_vs_snr()
 
