@@ -14,7 +14,7 @@ class FT8ref:
 
 FT8ref = FT8ref()
 
-from decoders.decode174_91_v1_0 import decode174_91
+from decoders.decode174_91_v0_9 import decode174_91
 
 def bitsLE_to_int(bits):
     """bits is MSB-first."""

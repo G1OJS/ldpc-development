@@ -2,6 +2,33 @@
 # interpreted arrays from the f90 code. The kMN and kNM are 1-based, as
 # per the f90 code, and the looked-up values are interpreted accordingly
 
+"""
+loop test results with 50 trials
+snr_dB, success%
+4.0, 0%
+4.2, 0%
+4.4, 0%
+4.6, 0%
+4.8, 2%
+5.1, 2%
+5.3, 6%
+5.5, 6%
+5.7, 20%
+5.9, 24%
+6.1, 32%
+6.3, 54%
+6.5, 52%
+6.7, 68%
+6.9, 82%
+7.2, 82%
+7.4, 88%
+7.6, 94%
+7.8, 98%
+8.0, 96%
+"""
+
+
+
 import numpy as np
 
 kNCW = 3
