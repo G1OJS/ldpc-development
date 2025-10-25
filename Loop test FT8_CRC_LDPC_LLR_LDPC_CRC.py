@@ -14,7 +14,7 @@ class FT8ref:
 
 FT8ref = FT8ref()
 
-from decoders.decode174_91_v0_9 import decode174_91
+from decoders.decode174_91_v2_2 import decode174_91
 
 def bitsLE_to_int(bits):
     """bits is MSB-first."""
@@ -111,7 +111,7 @@ def run_trials(n, snr_dB):
 def test_vs_snr():
     nTrials = 50
     print("snr_dB, success%")
-    for snr_dB in np.linspace(4, 8, 20):
+    for snr_dB in np.linspace(5, 8, 10):
         success = run_trials(nTrials, snr_dB)
         print(f"{snr_dB:.1f}, {success:.0%}")
 

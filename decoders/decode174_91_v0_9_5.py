@@ -1,23 +1,27 @@
-# V1.0
+# V0.9.5 = First working version of this code using faithfully reproduced and
+# interpreted arrays from the f90 code. The kMN and kNM are 1-based, as
+# per the f90 code, and the looked-up values are interpreted accordingly
 
 """
 loop test results with 50 trials
 snr_dB, success%
-5.0, 4%
-5.3, 10%
-5.7, 16%
-6.0, 26%
-6.3, 58%
-6.7, 62%
-7.0, 76%
-7.3, 96%
-7.7, 100%
+5.0, 0%
+5.3, 2%
+5.7, 4%
+6.0, 32%
+6.3, 54%
+6.7, 66%
+7.0, 68%
+7.3, 90%
+7.7, 94%
 8.0, 98%
 
 with 210703_133430.wav
 TEST 2156.2  -0.29 Max power → WM3PEN EA6VQ  -09
 TEST 2568.8   0.04 Max power → W1FC  F5BZB -08
 TEST  720.8  -0.07 LLR-LDPC (1) → A92EE  F5PSR -14
+TEST  587.5   0.09 LLR-LDPC (3) → K1JT  HA0DU  KN07
+TEST  637.5   0.04 LLR-LDPC (3) → N1JFU EA6EE
 
 """
 
@@ -77,7 +81,7 @@ def count_syndrome_checks(zn):
         return 0, cw, decoded_bits174_LE_list
     return ncheck, cw, []
 
-def decode174_91(llr, maxiterations = 50, alpha = 1, gamma = 0.03, nstall_max = 12, ncheck_max = 30):
+def decode174_91(llr, maxiterations = 50, alpha = 0.03, gamma = 0.03, nstall_max = 12, ncheck_max = 30):
     toc = np.zeros((7, kM), dtype=np.float32)       # message -> check messages
     tanhtoc = np.zeros((7, kM), dtype=np.float64)
     tov = np.zeros((kNCW, kN), dtype=np.float32)    # check -> message messages
@@ -136,6 +140,6 @@ def decode174_91(llr, maxiterations = 50, alpha = 1, gamma = 0.03, nstall_max = 
                     tvals = tanhtoc[:neigh_count, ichk][mask]
                     Tmn = np.prod(tvals) if tvals.size > 0 else 0.0
                 y = safe_atanh(-Tmn)
-                new_val = 2.0 * (-Tmn)
+                new_val = 2.0 * safe_atanh(-Tmn)
                 tov[kk, variable_node] = alpha * new_val + (1 - alpha) * tov[kk, variable_node]
     return [], it

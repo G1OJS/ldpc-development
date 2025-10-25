@@ -1,27 +1,113 @@
-# V1.0
+
 
 """
+V1.0
 loop test results with 50 trials
 snr_dB, success%
-5.0, 4%
-5.3, 10%
-5.7, 16%
-6.0, 26%
-6.3, 58%
-6.7, 62%
-7.0, 76%
-7.3, 96%
-7.7, 100%
-8.0, 98%
-
-with 210703_133430.wav
-TEST 2156.2  -0.29 Max power → WM3PEN EA6VQ  -09
-TEST 2568.8   0.04 Max power → W1FC  F5BZB -08
-TEST  720.8  -0.07 LLR-LDPC (1) → A92EE  F5PSR -14
-
+5.1, 2%
+5.3, 6%
+5.7, 20%
+6.1, 32%
+6.3, 54%
+6.7, 68%
+6.9, 82%
+7.6, 94%
+8.0, 96%
 """
 
 
+
+"""
+gamma = 0.0015
+snr_dB, success%
+5.0, 0%
+5.3, 6%
+5.7, 26%
+6.0, 34%
+6.3, 50%
+6.7, 62%
+7.0, 88%
+7.3, 94%
+7.7, 98%
+8.0, 98%
+"""
+
+"""
+gamma = 0.0013
+snr_dB, success%
+5.0, 0%
+5.3, 8%
+5.7, 20%
+6.0, 42%
+6.3, 50%
+6.7, 74%
+7.0, 86%
+7.3, 88%
+7.7, 100%
+8.0, 100%
+"""
+
+
+"""
+gamma = 0.001
+snr_dB, success%
+5.0, 4%
+5.3, 6%
+5.7, 12%
+6.0, 38%
+6.3, 52%
+6.7, 74%
+7.0, 84%
+7.3, 92%
+7.7, 94%
+8.0, 98%
+"""
+
+"""
+gamma = 0.0007
+snr_dB, success%
+5.0, 0%
+5.3, 8%
+5.7, 16%
+6.0, 36%
+6.3, 62%
+6.7, 70%
+7.0, 90%
+7.3, 90%
+7.7, 98%
+8.0, 98%
+"""
+
+"""
+gamma = 0.0005
+snr_dB, success%
+5.0, 2%
+5.3, 2%
+5.7, 16%
+6.0, 28%
+6.3, 66%
+6.7, 70%
+7.0, 86%
+7.3, 94%
+7.7, 100%
+8.0, 98%
+"""
+
+
+"""
+gamma = 0.0003
+snr_dB, success%
+5.0, 2%
+5.3, 6%
+5.7, 4%
+6.0, 20%
+6.3, 42%
+6.7, 66%
+7.0, 84%
+7.3, 94%
+7.7, 98%
+8.0, 100%
+"""
 
 import numpy as np
 
@@ -46,7 +132,6 @@ kNM = np.array([
 kN = 174
 kK = 91
 kM = kN - kK
-
 from PyFT8.FT8_crc import check_crc
 
 def bitsLE_to_int(bits):
@@ -58,8 +143,8 @@ def bitsLE_to_int(bits):
 
 def safe_atanh(x, eps=1e-12):
     x = np.clip(x, -1 + eps, 1 - eps)
-    return 0.5 * np.log((1 + x) / (1 - x))
-  #  return np.arctanh(x)
+  #  return 0.5 * np.log((1 + x) / (1 - x))
+    return np.arctanh(x)
 
 def count_syndrome_checks(zn):
     ncheck = 0
@@ -77,7 +162,7 @@ def count_syndrome_checks(zn):
         return 0, cw, decoded_bits174_LE_list
     return ncheck, cw, []
 
-def decode174_91(llr, maxiterations = 50, alpha = 1, gamma = 0.03, nstall_max = 12, ncheck_max = 30):
+def decode174_91(llr, maxiterations = 50, gamma = 0.0013, nstall_max = 12, ncheck_max = 30):
     toc = np.zeros((7, kM), dtype=np.float32)       # message -> check messages
     tanhtoc = np.zeros((7, kM), dtype=np.float64)
     tov = np.zeros((kNCW, kN), dtype=np.float32)    # check -> message messages
@@ -135,7 +220,5 @@ def decode174_91(llr, maxiterations = 50, alpha = 1, gamma = 0.03, nstall_max = 
                 else:
                     tvals = tanhtoc[:neigh_count, ichk][mask]
                     Tmn = np.prod(tvals) if tvals.size > 0 else 0.0
-                y = safe_atanh(-Tmn)
-                new_val = 2.0 * (-Tmn)
-                tov[kk, variable_node] = alpha * new_val + (1 - alpha) * tov[kk, variable_node]
+                tov[kk, variable_node] = 2.0 * safe_atanh(-Tmn)
     return [], it
