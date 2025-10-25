@@ -81,6 +81,7 @@ def safe_atanh(x, eps=1e-12):
     x = np.clip(x, -1 + eps, 1 - eps)
     return 0.5 * np.log((1 + x) / (1 - x))
 
+# precompute bits to check for syndrome
 synd_check_idxs=[]
 for i in range(kM):
     ichk = kNM[0:kNRW[i],i] - 1
@@ -88,27 +89,29 @@ for i in range(kM):
     synd_check_idxs.append(ichk)
 
 def count_syndrome_checks(zn):
-    ncheck = 0
-    cw = (zn > 0).astype(int)
-    for i in range(kM):
-        synd = sum(cw[synd_check_idxs[i]])
-        if ((synd %2) != 0): ncheck += 1
+
+#    synd_checks = [ np.count_nonzero(cw[synd_check_idxs[i]]) %2 for i in range(kM)]
+
+    synd_checks = [ sum(1 for llr in zn[synd_check_idxs[i]] if llr > 0) %2 for i in range(kM)]
+    ncheck = np.sum(synd_checks)
     if ncheck == 0:
+        cw = (zn > 0).astype(int)
         decoded_bits174_LE_list = cw.tolist() 
         decoded_bits91_int = bitsLE_to_int(decoded_bits174_LE_list[0:91])
         if(not check_crc(decoded_bits91_int)):
             return -1, cw, []
         return 0, cw, decoded_bits174_LE_list
-    return ncheck, cw, []
+    return ncheck, [], []
 
 def decode174_91(llr, maxiterations = 30, gamma = 0.0013, nstall_max = 8, ncheck_max = 30):
     toc = np.zeros((7, kM), dtype=np.float32)       # message -> check messages
     tanhtoc = np.zeros((7, kM), dtype=np.float64)
     tov = np.zeros((kNCW, kN), dtype=np.float32)    # check -> message messages
     nclast, nstall = 0, 0                           # stall condition variables
-    zn = np.copy(llr)                   # working copy of llrs
-    rng = np.max(llr) - np.min(llr)     # indication of scale of llrs
-    mult = rng * gamma          # empricical multiplier for tov, proportional to llr scale
+    llr = np.copy(llr)                              # working copy of llrs (for speed)
+    zn = np.array(llr, dtype=np.float32)            # working copy of llrs (for speed)    
+    rng = np.max(zn) - np.min(zn)                   # indication of scale of llrs
+    mult = rng * gamma                              # empricical multiplier for tov, proportional to llr scale
 
     ncheck, cw, decoded_bits174_LE_list = count_syndrome_checks(zn)
     if(ncheck ==0):
