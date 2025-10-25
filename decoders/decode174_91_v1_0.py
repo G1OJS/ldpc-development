@@ -66,7 +66,7 @@ def decode174_91(llr, maxiterations = 50, alpha = 1, gamma = 0.03, nstall_max = 
     mult = rng * gamma          # empricical multiplier for tov, proportional to llr scale
 
     ncheck, cw, decoded_bits174_LE_list = count_syndrome_checks(zn)
-    if(ncheck ==0): return decoded_bits174_LE_list, it
+    if(ncheck ==0): return decoded_bits174_LE_list, -1
 
     for it in range(maxiterations + 1):
         for i in range(kN):

@@ -33,12 +33,14 @@ def ldpc_encode(msg_crc: int) -> int:
         parity_bits = (parity_bits << 1) | bit
     return (msg_crc << 83) | parity_bits
 
-def add_noise_to_llr(llr, snr_db):
-    snr_linear = 10 ** (snr_db / 10)
-    noise_std = np.std(llr) / np.sqrt(snr_linear)
-    noise = np.random.normal(0, noise_std, size=llr.shape)
-    llr_noisy = llr + noise
-    return llr_noisy
+def add_noise_to_bits(bits, snr_dB):
+    noise = np.random.normal(0.5,0.5,len(bits))
+    e_bits = np.sum(bits **2)
+    e_noise = np.sum(noise **2)
+    snr_init_dB = 10*np.log10(e_bits / e_noise)
+    snr_adj = snr_dB - snr_init_dB
+    noise = noise * 10**(-snr_adj/20)
+    return bits + noise
 
 def crc14(bits77_int: int) -> int:
     # Generator polynomial (0x2757), width 14, init=0, refin=false, refout=false
@@ -73,19 +75,19 @@ def int_to_bitsLE(n, width):
     """Return [b(width-1), ..., b0], MSB-first."""
     return [ (n >> (width - 1 - i)) & 1 for i in range(width) ]
 
-def run_loop(snr):
+def run_loop(snr_dB):
     bits77_int = FT8ref.bits77
     bits91_int = append_crc(bits77_int)
     bits174_int = ldpc_encode(bits91_int)
     bits174_LE_list = int_to_bitsLE(bits174_int,174)
-    llr = 200000 * np.array(bits174_LE_list) - 100000  # LLRs for each bit (encoded message)
-    llr = add_noise_to_llr(llr, snr)
+    bits_plus_noise = add_noise_to_bits(np.array(bits174_LE_list), snr_dB)
+    llr = 200000 * bits_plus_noise - 100000
     decoded_bits174_LE_list, it = decode174_91(llr)
     decoded_bits174_int = bitsLE_to_int(decoded_bits174_LE_list)
     return bits77_int, bits91_int, bits174_int, llr, decoded_bits174_int, it
 
-def run_loop_print(snr):
-    bits77_int, bits91_int, bits174_int, llr, decoded_bits174_int, it = run_loop(snr)
+def run_loop_print(snr_dB):
+    bits77_int, bits91_int, bits174_int, llr, decoded_bits174_int, it = run_loop(snr_dB)
     print(f"77 message bits for 'VK1ABC VK3JPK QF22':\n{bits77_int:b}")
     print(f"Message plus crc (91 bits):\n{bits91_int:b}")
     print(f"CRC loop test: check_crc(append_crc(bits77_int)) = { check_crc(append_crc(bits77_int))}")
@@ -98,18 +100,20 @@ def run_loop_print(snr):
     else:
         print(f"SNR = {snr}dB. Decoder stopped after {it} iterations")
 
-def run_trials(n, snr):
+def run_trials(n, snr_dB):
     s = 0
     for i in range(n):
-        bits77_int, bits91_int, bits174_int, llr, decoded_bits174_int, it = run_loop(snr)
+        bits77_int, bits91_int, bits174_int, llr, decoded_bits174_int, it = run_loop(snr_dB)
         if(decoded_bits174_int>0):
             s +=1
     return(s/n)
 
 def test_vs_snr():
-    for snr in [1,2,3,4,5,6,7,8,9]:
-        print(run_trials(50,snr))
-
+    nTrials = 50
+    print("snr_dB, success%")
+    for snr_dB in np.linspace(4, 8, 20):
+        success = run_trials(nTrials, snr_dB)
+        print(f"{snr_dB:.1f}, {success:.0%}")
 
 test_vs_snr()
 
