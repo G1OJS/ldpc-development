@@ -3,16 +3,16 @@
 """
 maxiterations = 30, gamma = 0.0026, nstall_max = 8, ncheck_max = 30
 snr_dB, success%
-5.0, 4% time = 7.3
-5.3, 14% time = 15.2
-5.7, 16% time = 26.4
-6.0, 28% time = 37.2
-6.3, 38% time = 48.5
-6.7, 58% time = 56.4
-7.0, 84% time = 62.4
-7.3, 94% time = 68.0
-7.7, 98% time = 71.5
-8.0, 94% time = 75.0
+5.0, 4% time = 4.4
+5.3, 6% time = 11.9
+5.7, 22% time = 21.1
+6.0, 36% time = 33.0
+6.3, 48% time = 41.9
+6.7, 70% time = 49.7
+7.0, 84% time = 55.7
+7.3, 100% time = 59.2
+7.7, 98% time = 62.4
+8.0, 100% time = 65.1
 """
 
 import numpy as np
