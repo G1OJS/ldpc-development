@@ -89,37 +89,33 @@ for i in range(kM):
     synd_check_idxs.append(ichk)
 
 def count_syndrome_checks(zn):
-
-#    synd_checks = [ np.count_nonzero(cw[synd_check_idxs[i]]) %2 for i in range(kM)]
-
     synd_checks = [ sum(1 for llr in zn[synd_check_idxs[i]] if llr > 0) %2 for i in range(kM)]
     ncheck = np.sum(synd_checks)
     if ncheck == 0:
-        cw = (zn > 0).astype(int)
-        decoded_bits174_LE_list = cw.tolist() 
+        decoded_bits174_LE_list = (zn > 0).astype(int).tolist() 
         decoded_bits91_int = bitsLE_to_int(decoded_bits174_LE_list[0:91])
         if(not check_crc(decoded_bits91_int)):
-            return -1, cw, []
-        return 0, cw, decoded_bits174_LE_list
-    return ncheck, [], []
+            return -1, []
+        return 0, decoded_bits174_LE_list
+    return ncheck, []
 
-def decode174_91(llr, maxiterations = 30, gamma = 0.0013, nstall_max = 8, ncheck_max = 30):
+def decode174_91(llr, maxiterations = 30, gamma = 0.0026, nstall_max = 8, ncheck_max = 30):
     toc = np.zeros((7, kM), dtype=np.float32)       # message -> check messages
     tanhtoc = np.zeros((7, kM), dtype=np.float64)
     tov = np.zeros((kNCW, kN), dtype=np.float32)    # check -> message messages
     nclast, nstall = 0, 0                           # stall condition variables
     llr = np.copy(llr)                              # working copy of llrs (for speed)
     zn = np.array(llr, dtype=np.float32)            # working copy of llrs (for speed)    
-    rng = np.max(zn) - np.min(zn)                   # indication of scale of llrs
-    mult = rng * gamma                              # empricical multiplier for tov, proportional to llr scale
+    mult = (np.max(zn) - np.min(zn)) * gamma        # empricical multiplier for tov, proportional to llr scale
+    ncheck, decoded_bits174_LE_list = count_syndrome_checks(zn)
 
-    ncheck, cw, decoded_bits174_LE_list = count_syndrome_checks(zn)
     if(ncheck ==0):
         return decoded_bits174_LE_list, -1
+    
     for it in range(maxiterations + 1):
         for i in range(kN):
-            zn[i] += mult*sum(tov[:,i])
-        ncheck, cw, decoded_bits174_LE_list = count_syndrome_checks(zn)
+            zn[i] += mult * sum(tov[:,i])
+        ncheck, decoded_bits174_LE_list = count_syndrome_checks(zn)
         if(ncheck <=0):
             return decoded_bits174_LE_list, it
         nstall = 0 if ncheck < nclast else nstall +1
@@ -128,11 +124,10 @@ def decode174_91(llr, maxiterations = 30, gamma = 0.0013, nstall_max = 8, ncheck
             return [], it
         for j in range(kM):
             for i in range(kNRW[j]):    
-                ibj = int(kNM[i, j] - 1)   
+                ibj = kNM[i, j] - 1   
                 toc[i, j] = zn[ibj]
                 for kk in range(kNCW):
-                    chknum = kMN[kk, ibj] - 1
-                    if chknum != j:
+                    if kMN[kk, ibj] - 1 != j:
                         toc[i, j] -= tov[kk, ibj]
         for j in range(kM):
             tanhtoc[:kNRW[j], j] = np.tanh(-toc[:kNRW[j], j] / 2.0)
@@ -145,5 +140,5 @@ def decode174_91(llr, maxiterations = 30, gamma = 0.0013, nstall_max = 8, ncheck
                     mask = (neigh_vars != variable_node)
                     tvals = tanhtoc[:neigh_count, ichk][mask]
                     Tmn = np.prod(tvals) if tvals.size > 0 else 0.0
-                    tov[kk, variable_node] = 2.0 * safe_atanh(-Tmn)
+                    tov[kk, variable_node] = safe_atanh(-Tmn)
     return [], it
