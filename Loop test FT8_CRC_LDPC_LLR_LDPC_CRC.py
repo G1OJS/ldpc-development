@@ -96,9 +96,9 @@ def run_loop_print(snr_dB):
     print(f"Message plus crc and parity reference from {FT8ref.url}\n{FT8ref.bits174:b}")
     #print(f"LLRs with noise:\n"+','.join([f"{ll:.1f} " for ll in llr]))
     if(decoded_bits174_int>0):
-        print(f"SNR = {snr}dB. Bits decoded after {it} iterations\n{bits174_int:b}")
+        print(f"SNR = {snr_dB}dB. Bits decoded after {it} iterations\n{bits174_int:b}")
     else:
-        print(f"SNR = {snr}dB. Decoder stopped after {it} iterations")
+        print(f"SNR = {snr_dB}dB. Decoder stopped after {it} iterations")
 
 def run_trials(n, snr_dB):
     s = 0
@@ -108,9 +108,9 @@ def run_trials(n, snr_dB):
             s +=1
     return(s/n)
 
-import time
-t0=time.time()
 def test_vs_snr():
+    import time
+    t0=time.time()
     nTrials = 50
     print("snr_dB, success%")
     for snr_dB in np.linspace(5, 8, 10):
@@ -118,6 +118,8 @@ def test_vs_snr():
         print(f"{snr_dB:.1f}, {success:.0%} time = {time.time()-t0:.1f}")
 
 test_vs_snr()
+
+#run_loop_print(8)
 
 
 
