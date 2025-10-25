@@ -3,16 +3,17 @@
 """
 maxiterations = 30, gamma = 0.0013, nstall_max = 8, ncheck_max = 30
 snr_dB, success%
-5.0, 2% time = 8.3
-5.3, 8% time = 15.7
-5.7, 8% time = 21.9
-6.0, 30% time = 31.4
-6.3, 44% time = 41.2
-6.7, 82% time = 49.3
-7.0, 88% time = 54.7
-7.3, 86% time = 60.7
-7.7, 100% time = 63.4
-8.0, 98% time = 66.1
+snr_dB, success%
+5.0, 2% time = 5.2
+5.3, 6% time = 13.7
+5.7, 34% time = 24.3
+6.0, 34% time = 33.7
+6.3, 58% time = 43.5
+6.7, 66% time = 51.3
+7.0, 88% time = 56.4
+7.3, 96% time = 61.1
+7.7, 98% time = 64.7
+8.0, 96% time = 67.8
 """
 
 import numpy as np
@@ -59,7 +60,7 @@ for i in range(kM):
     synd_check_idxs.append(ichk)
 
 def count_syndrome_checks(zn):
-    synd_checks = [ sum(1 for llr in zn[synd_check_idxs[i]] if llr > 0) %2 for i in range(kM)]
+    synd_checks = [ np.sum(1 for llr in zn[synd_check_idxs[i]] if llr > 0) %2 for i in range(kM)]
     ncheck = np.sum(synd_checks)
     if ncheck > 0:
         return ncheck, []
