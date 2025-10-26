@@ -14,7 +14,7 @@ class FT8ref:
 
 FT8ref = FT8ref()
 
-from decoders.decode174_91_v2_3 import decode174_91
+from decoders.decode174_91_v2_4 import decode174_91
 
 def bitsLE_to_int(bits):
     """bits is MSB-first."""
@@ -82,7 +82,7 @@ def run_loop(snr_dB):
     bits174_LE_list = int_to_bitsLE(bits174_int,174)
     bits_plus_noise = add_noise_to_bits(np.array(bits174_LE_list), snr_dB)
     llr = 200000 * bits_plus_noise - 100000
-    decoded_bits174_LE_list, it = decode174_91(llr)
+    ncheck, decoded_bits174_LE_list, it = decode174_91(llr)
     decoded_bits174_int = bitsLE_to_int(decoded_bits174_LE_list)
     return bits77_int, bits91_int, bits174_int, llr, decoded_bits174_int, it
 
