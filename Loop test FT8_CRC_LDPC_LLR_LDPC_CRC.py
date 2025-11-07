@@ -14,7 +14,7 @@ class FT8ref:
 
 FT8ref = FT8ref()
 
-from decoders.decode174_91_v2_4 import decode174_91
+from decoders.decode174_91_v4_0 import decode174_91
 
 def bitsLE_to_int(bits):
     """bits is MSB-first."""
@@ -76,15 +76,19 @@ def int_to_bitsLE(n, width):
     return [ (n >> (width - 1 - i)) & 1 for i in range(width) ]
 
 def run_loop(snr_dB):
+    llr_sd = 3.0
     bits77_int = FT8ref.bits77
     bits91_int = append_crc(bits77_int)
     bits174_int = ldpc_encode(bits91_int)
     bits174_LE_list = int_to_bitsLE(bits174_int,174)
     bits_plus_noise = add_noise_to_bits(np.array(bits174_LE_list), snr_dB)
-    llr = 200000 * bits_plus_noise - 100000
-    ncheck, decoded_bits174_LE_list, it = decode174_91(llr)
+    LLR174s = bits_plus_noise
+    LLR174s -= np.mean(LLR174s)
+    LLR174s *= (llr_sd / np.std(LLR174s))
+    LLR174s = np.clip(LLR174s, -10.0, 10.0)
+    ncheck, decoded_bits174_LE_list, it = decode174_91(LLR174s)
     decoded_bits174_int = bitsLE_to_int(decoded_bits174_LE_list)
-    return bits77_int, bits91_int, bits174_int, llr, decoded_bits174_int, it
+    return bits77_int, bits91_int, bits174_int, LLR174s, decoded_bits174_int, it
 
 def run_loop_print(snr_dB):
     bits77_int, bits91_int, bits174_int, llr, decoded_bits174_int, it = run_loop(snr_dB)
@@ -113,7 +117,7 @@ def test_vs_snr():
     t0=time.time()
     nTrials = 50
     print("snr_dB, success%")
-    for snr_dB in np.linspace(5, 8, 10):
+    for snr_dB in np.linspace(0, 8, 9):
         success = run_trials(nTrials, snr_dB)
         print(f"{snr_dB:.1f}, {success:.0%} time = {time.time()-t0:.1f}")
 
